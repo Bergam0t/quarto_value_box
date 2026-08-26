@@ -80,3 +80,7 @@ Local SVG, inlined into the document
 ::: {.value-box icon="example-icon.png" icon-size="64px" value="15"}
 Local PNG, referenced by src
 :::
+
+::: {.value-box icon="example-icon.svg" align="center" value="16"}
+Local SVG, centered
+:::

@@ -272,6 +272,13 @@ function Div(el)
     local min_height = escape_attr(el.attributes["min-height"] or "100px")
     local padding     = escape_attr(el.attributes["padding"] or "1.5rem")
     local align     = escape_attr(el.attributes["align"] or "left")
+    -- The icon (and, in the row layout, .vb-content) are flex items, not
+    -- inline content of .value-box, so text-align alone can't position
+    -- them — see --vb-icon-align below. Same left/center/right shorthand
+    -- convention as valign_map further down, with a raw-value fallback for
+    -- anyone who wants to pass a CSS keyword directly.
+    local align_map = { left = "flex-start", center = "center", right = "flex-end" }
+    local icon_align_value = align_map[align] or align
     local valign = escape_attr(el.attributes["valign"] or "middle")
     local href      = escape_attr(el.attributes["href"] or "")
     -- Only meaningful alongside href — a target on a plain div has nothing to
@@ -478,6 +485,7 @@ function Div(el)
       css_decl("--vb-min-height", min_height) ..
       css_decl("--vb-padding", padding) ..
       css_decl("--vb-text-align", align) ..
+      css_decl("--vb-icon-align", icon_align_value) ..
       (color_is_value and css_decl("--vb-bg", color) or "") ..
       outer_layout_style
 
@@ -533,7 +541,7 @@ function Div(el)
         if png_file then
           png_file:close()
           icon_html = string.format(
-            '<img class="icon" src="%s" style="%sobject-fit:contain; display:block; margin:0 auto;%s" alt="">',
+            '<img class="icon" src="%s" style="%sobject-fit:contain; display:block;%s" alt="">',
             icon_attr, icon_img_size, icon_extra_style
           )
         else

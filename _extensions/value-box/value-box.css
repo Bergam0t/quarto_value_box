@@ -50,6 +50,10 @@ a.value-box:hover {
     line-height: 1;
     margin-bottom: 0.6rem;
     color: white;
+    /* The icon is a flex item, not inline content of .value-box, so
+       text-align (--vb-text-align) can't position it — align-self can.
+       See the icon_align_value comment in value-box.lua. */
+    align-self: var(--vb-icon-align, flex-start);
 }
 
 /* Optical-bearing compensation for stacked (top/bottom) font-glyph icons —
@@ -106,6 +110,10 @@ a.value-box:hover {
 .value-box.vb-icon-left .icon,
 .value-box.vb-icon-right .icon {
     flex-shrink: 0;
+    /* In this row layout the cross axis is vertical, already governed by
+       valign/--vb-align-items — align (--vb-icon-align) was never meant to
+       control it here, so fall back to the container's align-items. */
+    align-self: auto;
 }
 .value-box.vb-icon-left .vb-content,
 .value-box.vb-icon-right .vb-content {

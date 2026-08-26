@@ -275,6 +275,16 @@ for fmt in "${formats[@]}"; do
           assert_count 1 "phosphor-icons/web@2.1.2/src/bold"    "$out" "$fixture/$fmt links Phosphor bold once"
           assert_present "<svg"                     "$out" "$fixture/$fmt inlines the local SVG"
           assert_present 'src="example-icon.png"'   "$out" "$fixture/$fmt references the local PNG"
+
+          # Regression guard: align must reach the icon via a real cross-axis
+          # alignment property, not text-align — see the icon_align_value
+          # comment in value-box.lua. Anchored to the mechanism (the custom
+          # property, and the CSS rule that consumes it) rather than a
+          # rendered pixel position, consistent with how --vb-justify-content
+          # and --vb-align-items are pinned elsewhere in this suite.
+          assert_present "--vb-icon-align:center;" "$out" "$fixture/$fmt align=center reaches the icon via --vb-icon-align"
+          assert_present "align-self: var(--vb-icon-align" "$work/$fmt/_extensions/value-box/value-box.css" \
+            "$fixture/$fmt value-box.css keeps the align-self rule that consumes --vb-icon-align"
         fi
 
         if [ "$fixture" = "minimal" ]; then
@@ -394,7 +404,7 @@ for fmt in "${formats[@]}"; do
         if [ "$fixture" = "passthrough" ]; then
           # Regression guard: a box using none of these attributes must render
           # identically to how every other box in this suite already does.
-          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; "><div class="vb-content" style=""><div class="value" style="font-size:2.2rem; color:white; ">1<' \
+          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; "><div class="vb-content" style=""><div class="value" style="font-size:2.2rem; color:white; ">1<' \
             "$out" "$fixture/$fmt a box with no extra attributes is unchanged"
 
           # id, an extra class alongside value-box, role/aria-label and an
@@ -402,7 +412,7 @@ for fmt in "${formats[@]}"; do
           # attribute (top) that isn't data-*/aria-*/role/tabindex/lang is
           # left off entirely, not renamed into a data-* attribute that looks
           # like it survived but is actually inert.
-          assert_present '<div id="kpi-1" class="value-box bg-blue custom-hook" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; " role="group" aria-label="Sales this quarter" data-id="box1">' \
+          assert_present '<div id="kpi-1" class="value-box bg-blue custom-hook" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; " role="group" aria-label="Sales this quarter" data-id="box1">' \
             "$out" "$fixture/$fmt passes through id, extra class, role/aria-label, data-id and drops an unrecognised attribute"
           assert_absent 'data-top' "$out" "$fixture/$fmt does not rename an unrecognised attribute into a data- attribute"
 
@@ -414,7 +424,7 @@ for fmt in "${formats[@]}"; do
           # The href branch (an anchor, not a div) gets passthrough too. The
           # anchor's text-decoration/cursor styling now lives in value-box.css
           # (see the a.value-box rule) rather than being rebuilt inline here.
-          assert_present '<a href="https://example.com" class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; " data-tracking="promo">' \
+          assert_present '<a href="https://example.com" class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; " data-tracking="promo">' \
             "$out" "$fixture/$fmt passes through a data attribute on the href branch"
 
           # A double-quote in a passthrough value must not be able to close
@@ -440,7 +450,7 @@ for fmt in "${formats[@]}"; do
           # when index is actually set. Earlier this attribute was reserved
           # unconditionally, so it was dropped (and warned about) even with
           # nothing to collide with.
-          assert_present '<div class="value-box bg-blue fragment fade-in-then-semi-out" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; " data-fragment-index="3">' \
+          assert_present '<div class="value-box bg-blue fragment fade-in-then-semi-out" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; " data-fragment-index="3">' \
             "$out" "$fixture/$fmt keeps a literal data-fragment-index when there is no index to collide with"
 
           # HTML attribute names are case-insensitive, and Quarto's own
@@ -451,7 +461,7 @@ for fmt in "${formats[@]}"; do
           # string "data-role", which a document-wide search would also match
           # — the tautology trap tests/README.md warns about, hit here while
           # writing this very assertion.
-          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; " role="group">' \
+          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; " role="group">' \
             "$out" "$fixture/$fmt matches a mixed-case attribute name case-insensitively, without double-prefixing it"
 
           # Regression guard for a real bug: collision detection (not just the
@@ -467,7 +477,7 @@ for fmt in "${formats[@]}"; do
           # search — this fixture's own prose explaining the fix contains
           # that literal string, the same trap that caught the Role assertion
           # above.
-          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-justify-content:center; "><div class="vb-content" style=""><div class="value" style="font-size:2.2rem; color:white; ">9<' \
+          assert_present '<div class="value-box bg-blue" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:left; --vb-icon-align:flex-start; --vb-justify-content:center; "><div class="vb-content" style=""><div class="value" style="font-size:2.2rem; color:white; ">9<' \
             "$out" "$fixture/$fmt does not leak a mixed-case Style as data-style"
         fi
 
@@ -498,15 +508,15 @@ for fmt in "${formats[@]}"; do
           # Row-level attribute inheritance. Each pattern below is entirely
           # filter-generated (class list + custom-property style), so it
           # cannot pass by coincidence the way an echoed attribute could.
-          assert_count 2 '<div class="value-box vb-icon-left bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:right; --vb-align-items:center; ">' \
+          assert_count 2 '<div class="value-box vb-icon-left bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:right; --vb-icon-align:flex-end; --vb-align-items:center; ">' \
             "$out" "$fixture/$fmt both children with no attributes of their own inherit icon-position, color, icon-size and align from the row"
           assert_present 'style="font-size:4em; color:white; "></i>' "$out" "$fixture/$fmt icon-size inherited from the row reaches the icon"
 
           # A child that sets its own color overrides the row's, but keeps
           # every other inherited attribute (icon-position, icon-size, align).
-          assert_present '<div class="value-box vb-icon-right bg-red" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-align-items:center; ">' \
+          assert_present '<div class="value-box vb-icon-right bg-red" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-icon-align:center; --vb-align-items:center; ">' \
             "$out" "$fixture/$fmt a child's own color overrides the row's, other inherited attributes are unaffected"
-          assert_present '<div class="value-box vb-icon-right bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-align-items:center; ">' \
+          assert_present '<div class="value-box vb-icon-right bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-icon-align:center; --vb-align-items:center; ">' \
             "$out" "$fixture/$fmt a sibling with no color of its own still inherits the row's"
 
           # An explicit blank icon-color on a child is a deliberate override,
