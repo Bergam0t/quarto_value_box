@@ -192,12 +192,19 @@ Your overrides and new colours should be specified like this.
 background-color specifies the colour of the box.
 color is used for text and icons within the box.
 
+Always pair the plain `.bg-*` selector with an `a.value-box.bg-*` selector, as shown below. A box rendered
+with `href=` becomes an `<a>` element instead of a `<div>`, and the extension's own CSS includes a
+higher-specificity rule on `<a>` boxes (needed so linked boxes keep their colour under themes like
+Reveal.js, which style anchors directly). A plain single-class `.bg-brand` rule loses to that rule and gets
+silently reverted to the default background — the doubled selector avoids this, exactly like the built-in
+colours in value-box.css already do.
+
 ```scss
 // Override extension defaults
-.bg-blue  { background-color: #1a3f6f; color: white; }
+.bg-blue, a.value-box.bg-blue { background-color: #1a3f6f; color: white; }
 
 // Add entirely new colours not in the extension
-.bg-brand { background-color: #c8102e; color: white; }
+.bg-brand, a.value-box.bg-brand { background-color: #c8102e; color: white; }
 ```
 
 You can also use SCSS variables if you want to define your palette once and reuse it across your project:
@@ -207,9 +214,9 @@ $brand-primary:   #c8102e;
 $brand-secondary: #003087;
 $brand-neutral:   #4a4f57;
 
-.bg-brand-primary   { background-color: $brand-primary;   color: white; }
-.bg-brand-secondary { background-color: $brand-secondary; color: white; }
-.bg-brand-neutral   { background-color: $brand-neutral;   color: white; }
+.bg-brand-primary,   a.value-box.bg-brand-primary   { background-color: $brand-primary;   color: white; }
+.bg-brand-secondary, a.value-box.bg-brand-secondary { background-color: $brand-secondary; color: white; }
+.bg-brand-neutral,   a.value-box.bg-brand-neutral   { background-color: $brand-neutral;   color: white; }
 ```
 
 ### Brand colours (`_brand.yml`)
