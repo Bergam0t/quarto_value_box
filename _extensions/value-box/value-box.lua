@@ -168,6 +168,64 @@ local function build_wrapper_attrs(el, own_class, extra_style_hint, reserved_att
   return id_attr, extra_classes, passthrough_attrs
 end
 
+-- Attributes eligible to flow down from .value-box-row to a .value-box child
+-- that doesn't set them itself (a child's own value, including an explicit
+-- blank override, always wins — see inject_row_defaults below). Deliberately
+-- an explicit allowlist rather than "everything except a denylist", matching
+-- build_wrapper_attrs's own passthrough-namespace convention above.
+--
+-- Excluded on purpose: icon/value/title/delta/delta-direction/href (per-box
+-- content/identity, the whole reason a row has more than one box), index
+-- (must stay unique per box for Reveal.js fragment ordering), fragment
+-- (per-box animation opt-in), and icon-type — despite looking like a styling
+-- switch, it's the only way to opt into Material Symbols (never
+-- auto-detected, see the comment above material_variants), so inheriting it
+-- would silently coerce every other child's icon (e.g. an "fa-star" box)
+-- onto the Material renderer too, with no warning. Each box sets its own
+-- icon-type when it needs one.
+local INHERITABLE_ATTRS = {
+  "icon-position", "icon-size", "icon-color",
+  "color",
+  "width", "height", "min-height", "padding",
+  "align", "valign",
+  "font-size", "font-color",
+  "value-position", "value-font-size", "value-color",
+  "title-font-size", "title-color",
+  "delta-color", "delta-font-size",
+  "target",
+  "outer-extra-style", "icon-extra-style", "content-extra-style",
+  "details-extra-style", "value-extra-style", "title-extra-style",
+  "delta-extra-style", "value-row-extra-style",
+}
+
+-- Runs as its own filter pass, before the Div(el) pass below (see the
+-- `return` at the end of this file). Pandoc's single-pass Div(el) walk is
+-- bottom-up, so by the time it reaches a .value-box-row its .value-box
+-- children have already been expanded into raw HTML — nothing left to read
+-- attributes off. Running this as an earlier, separate pass mutates each
+-- child's attributes table in place while it's still a real Div, so the
+-- later Div(el) pass picks up the merged values through its existing
+-- `el.attributes["x"] or default` reads with no changes to that logic at all.
+local function inject_row_defaults(el)
+  if not el.classes:includes("value-box-row") then
+    return nil
+  end
+  for _, child in ipairs(el.content) do
+    if child.t == "Div" and child.classes:includes("value-box") then
+      for _, name in ipairs(INHERITABLE_ATTRS) do
+        -- nil (not falsy) is "unset": an explicit blank value like
+        -- icon-color="" is a deliberate override and must not be replaced by
+        -- the row's default, same principle as the icon_size_raw ~= "" guard
+        -- further down.
+        if child.attributes[name] == nil and el.attributes[name] ~= nil then
+          child.attributes[name] = el.attributes[name]
+        end
+      end
+    end
+  end
+  return el
+end
+
 function Div(el)
   if el.classes:includes("value-box") then
 
@@ -659,3 +717,12 @@ function Div(el)
   end
 
 end
+
+-- Two sequential passes: inject_row_defaults merges row-level attribute
+-- defaults into each .value-box child while it's still a real Div, then Div
+-- (unchanged) runs its own full pass over the resulting document to expand
+-- both .value-box and .value-box-row into HTML.
+return {
+  { Div = inject_row_defaults },
+  { Div = Div },
+}

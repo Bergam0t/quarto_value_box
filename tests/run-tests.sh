@@ -494,6 +494,46 @@ for fmt in "${formats[@]}"; do
           # A literal style attribute must not survive as a second style
           # attribute alongside the row's own generated one.
           assert_absent 'style="color:red"' "$out" "$fixture/$fmt drops a literal style attribute on the row wrapper"
+
+          # Row-level attribute inheritance. Each pattern below is entirely
+          # filter-generated (class list + custom-property style), so it
+          # cannot pass by coincidence the way an echoed attribute could.
+          assert_count 2 '<div class="value-box vb-icon-left bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:right; --vb-align-items:center; ">' \
+            "$out" "$fixture/$fmt both children with no attributes of their own inherit icon-position, color, icon-size and align from the row"
+          assert_present 'style="font-size:4em; color:white; "></i>' "$out" "$fixture/$fmt icon-size inherited from the row reaches the icon"
+
+          # A child that sets its own color overrides the row's, but keeps
+          # every other inherited attribute (icon-position, icon-size, align).
+          assert_present '<div class="value-box vb-icon-right bg-red" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-align-items:center; ">' \
+            "$out" "$fixture/$fmt a child's own color overrides the row's, other inherited attributes are unaffected"
+          assert_present '<div class="value-box vb-icon-right bg-teal" style="--vb-width:80%; --vb-min-height:100px; --vb-padding:1.5rem; --vb-text-align:center; --vb-align-items:center; ">' \
+            "$out" "$fixture/$fmt a sibling with no color of its own still inherits the row's"
+
+          # An explicit blank icon-color on a child is a deliberate override,
+          # not "unset" — it must not be replaced by the row's icon-color, and
+          # must not emit an empty "color:;" declaration either.
+          assert_present 'class="icon vb-bearing-left bi bi-star" style="font-size:3em; "></i>' \
+            "$out" "$fixture/$fmt a child that blanks icon-color keeps no colour declaration, not the row's"
+          assert_present 'class="icon vb-bearing-left bi bi-star" style="font-size:3em; color:red; "></i>' \
+            "$out" "$fixture/$fmt a sibling with no icon-color of its own inherits the row's"
+
+          # href is not in the inheritable list, so a row that carries one has
+          # no effect on a child that sets no href of its own.
+          assert_absent '<a href="https://example.com/row"' "$out" "$fixture/$fmt href on the row does not make a child render as a link"
+
+          # icon-extra-style inherits from the row, and a child's own value
+          # overrides it rather than being appended alongside it.
+          assert_present 'class="icon vb-bearing-left bi bi-star" style="font-size:3em; color:white; opacity:0.5;"></i>' \
+            "$out" "$fixture/$fmt icon-extra-style inherited from the row reaches a child with none of its own"
+          assert_present 'class="icon vb-bearing-left bi bi-star" style="font-size:3em; color:white; opacity:0.9;"></i>' \
+            "$out" "$fixture/$fmt a child's own icon-extra-style overrides the row's"
+
+          # An inherited font-color flows through the value/title colour
+          # fallback chain exactly as a locally-set one would.
+          assert_present '<div class="value" style="font-size:2.2rem; color:black; ">7</div>' \
+            "$out" "$fixture/$fmt inherited font-color reaches the value via the existing fallback chain"
+          assert_present '<div class="title" style="color:black; ">Composed</div>' \
+            "$out" "$fixture/$fmt inherited font-color reaches the title via the existing fallback chain"
         fi
         ;;
 

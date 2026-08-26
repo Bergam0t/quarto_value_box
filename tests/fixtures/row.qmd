@@ -105,3 +105,94 @@ Falls back to a row
 :::
 
 :::
+
+## Row-level defaults inherited by children
+
+`icon-position`, `color`, `icon-size` and `align` are set once on the row;
+neither child sets any of them, so both inherit all four.
+
+::: {.value-box-row icon-position="left" color="bg-teal" icon-size="4em" align="right"}
+
+::: {.value-box icon="bi-star" value="1"}
+Inherits row defaults
+:::
+
+::: {.value-box icon="bi-star" value="2"}
+Also inherits row defaults
+:::
+
+:::
+
+## A child overriding one inherited attribute keeps the rest
+
+::: {.value-box-row icon-position="right" color="bg-teal" icon-size="2rem" align="center"}
+
+::: {.value-box icon="bi-star" value="1" color="bg-red"}
+Overrides colour, keeps the other inherited defaults
+:::
+
+::: {.value-box icon="bi-star" value="2"}
+Still inherits colour from the row
+:::
+
+:::
+
+## A blank child override is not replaced by the row default
+
+The row sets `icon-color`; a child that explicitly blanks its own
+`icon-color` must keep no colour declaration at all, not fall back to the
+row's value — an explicit blank is a deliberate override, same as it is
+when set directly on a box.
+
+::: {.value-box-row icon-color="red"}
+
+::: {.value-box icon="bi-star" value="1" icon-color=""}
+Blanks icon-color
+:::
+
+::: {.value-box icon="bi-star" value="2"}
+Inherits icon-color from the row
+:::
+
+:::
+
+## A non-inheritable attribute on the row never reaches children
+
+`href` is not in the inheritable list — a row that (harmlessly) carries one
+has no effect on its children, which still render as plain divs, not links.
+
+::: {.value-box-row href="https://example.com/row"}
+
+::: {.value-box value="1"}
+Still a div, not a link
+:::
+
+:::
+
+## An extra-style hook inherits, and a child's own value overrides it
+
+::: {.value-box-row icon-extra-style="opacity:0.5;"}
+
+::: {.value-box icon="bi-star" value="1"}
+Inherits icon-extra-style
+:::
+
+::: {.value-box icon="bi-star" value="2" icon-extra-style="opacity:0.9;"}
+Overrides icon-extra-style
+:::
+
+:::
+
+## Inherited font-color flows through the existing value/title colour fallback
+
+The row sets only `font-color`; the child sets none of `font-color`,
+`value-color` or `title-color`, so both fall back through to the inherited
+`font-color` exactly as they would to one set directly on the box.
+
+::: {.value-box-row font-color="black"}
+
+::: {.value-box value="7" title="Composed"}
+Both value and title pick up the inherited font-color
+:::
+
+:::

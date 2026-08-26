@@ -1,3 +1,7 @@
+# v1.5.0
+
+- Add attribute inheritance for `.value-box-row`: styling/layout attributes (`icon-position`, `icon-size`, `icon-color`, `color`, `width`, `height`, `min-height`, `padding`, `align`, `valign`, `font-size`, `font-color`, `value-position`, `value-font-size`, `value-color`, `title-font-size`, `title-color`, `delta-color`, `delta-font-size`, `target`) and the `*-extra-style` escape hatches, set on `.value-box-row`, now become defaults for any `.value-box` child that doesn't set them itself — a child's own value, including an explicit blank override, always wins. Content/identity attributes (`icon`, `value`, `title`, `delta`, `delta-direction`, `href`, `index`, `fragment`) never inherit, and neither does `icon-type`, since it's the only way to opt into Material Symbols and inheriting it would silently coerce every other child's icon onto the Material renderer too
+
 # v1.4.0
 
 - Add support for the div's own `#id` and extra classes, plus `data-*`/`aria-*` attributes and `role`/`tabindex`/`lang`: these now pass through onto the rendered box instead of being silently dropped, so things like `{#kpi .value-box}` with `data-id` (revealjs auto-animate) or ARIA attributes work the same as they would on any other div. Anything outside that set is left off entirely rather than renamed to a `data-` attribute. A literal `style` attribute is dropped (with a warning) rather than colliding with the box's own `style`; a literal `data-fragment-index` attribute is dropped the same way if it would collide with the one generated from `index`

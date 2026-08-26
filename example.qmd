@@ -681,6 +681,52 @@ Uptime
 
 :::
 
+## Row-level defaults
+
+::: {style='font-size: 75%;'}
+Set shared styling attributes once on the row instead of repeating them on every box. A box that doesn't set its own value inherits the row's, and one that does (like the `color` override below) always wins.
+:::
+
+::: {.value-box-row icon-position="top" color="bg-red" icon-size="2rem" width="90%" align="center"}
+
+::: {.value-box href="https://podcast.hsma.co.uk/episodes" icon="bi bi-headphones"}
+Click here to listen to our past episodes
+:::
+
+::: {.value-box href="https://hsma.co.uk" icon="fa-solid fa-chalkboard-user"}
+Click here to find out more about the HSMA programme
+:::
+
+::: {.value-box href="https://hsma.co.uk/hsma_content/modules/modules.html" icon="bi bi-camera-reels" color="bg-blue"}
+Click here to access our HSMA 6 content recordings, slides and sample code
+:::
+
+:::
+
+::: {style='font-size: 75%;'}
+```md
+::: {.value-box-row icon-position="top" color="bg-red" icon-size="2rem" width="90%" align="center"}
+
+::: {.value-box href="https://podcast.hsma.co.uk/episodes" icon="bi bi-headphones"}
+Click here to listen to our past episodes
+:::
+
+::: {.value-box href="https://hsma.co.uk" icon="fa-solid fa-chalkboard-user"}
+Click here to find out more about the HSMA programme
+:::
+
+::: {.value-box href="https://hsma.co.uk/hsma_content/modules/modules.html" icon="bi bi-camera-reels" color="bg-blue"}
+Click here to access our HSMA 6 content recordings, slides and sample code
+:::
+
+:::
+```
+:::
+
+::: {style='font-size: 75%;'}
+Only the third box's `color` was repeated — `icon-position`, `icon-size`, `width` and `align` were each set once on the row and picked up by all three boxes.
+:::
+
 ## Grid layout - example
 
 Set `columns` to switch to a grid: extra boxes wrap onto further rows once it's full, with every row — not just each one individually — kept the same height.

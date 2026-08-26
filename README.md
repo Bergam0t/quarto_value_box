@@ -116,6 +116,26 @@ With no `columns` set, boxes lay out in a single row that doesn't wrap — the c
 
 Like `.value-box` itself, `.value-box-row` passes through its own `#id`, extra classes, and `data-*`/`aria-*`/`role`/`tabindex`/`lang` attributes; a literal `style` attribute is dropped (with a warning) — use `extra-style` instead.
 
+Rather than repeating the same styling attributes on every box in a row, set them once on the row itself — any `.value-box` child that doesn't set that attribute itself picks up the row's value, and a child that does set its own always wins (including an explicit blank, e.g. `icon-color=""`, which counts as "set"):
+
+```md
+::: {.value-box-row icon-position="top" color="bg-red" icon-size="2rem" width="90%" align="center"}
+
+::: {.value-box href="https://podcast.hsma.co.uk/episodes" icon="bi bi-headphones"}
+Click here to listen to our past episodes
+:::
+
+::: {.value-box href="https://hsma.co.uk" icon="fa-solid fa-chalkboard-user"}
+Click here to find out more about the HSMA programme
+:::
+
+:::
+```
+
+The inheritable attributes are: `icon-position`, `icon-size`, `icon-color`, `color`, `width`, `height`, `min-height`, `padding`, `align`, `valign`, `font-size`, `font-color`, `value-position`, `value-font-size`, `value-color`, `title-font-size`, `title-color`, `delta-color`, `delta-font-size`, `target`, and the `*-extra-style` hooks (`outer-extra-style`, `icon-extra-style`, `content-extra-style`, `details-extra-style`, `value-extra-style`, `title-extra-style`, `delta-extra-style`, `value-row-extra-style`).
+
+The following never inherit, since they identify a specific box rather than style it: `icon`, `value`, `title`, `delta`, `delta-direction`, `href`, `index`, `fragment`. `icon-type` also never inherits — despite being a styling-like switch, it's the only way to opt into Material Symbols icons (never auto-detected), so inheriting it from the row would silently coerce every other child's icon onto the Material renderer too; set it on each box that needs it.
+
 | Parameter    | Type    | Default    | Description                                                                                                                                    |
 | ------------ | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `columns`    | number  | `""`       | Number of columns in the grid. If omitted, boxes lay out in a single non-wrapping row instead — one column per box, no count needed.             |
