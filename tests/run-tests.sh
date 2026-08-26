@@ -285,6 +285,17 @@ for fmt in "${formats[@]}"; do
           assert_present "--vb-icon-align:center;" "$out" "$fixture/$fmt align=center reaches the icon via --vb-icon-align"
           assert_present "align-self: var(--vb-icon-align" "$work/$fmt/_extensions/value-box/value-box.css" \
             "$fixture/$fmt value-box.css keeps the align-self rule that consumes --vb-icon-align"
+
+          # Regression guard: icon-size must constrain only the icon's
+          # larger natural dimension, not force a square box that a non-
+          # square source image (this PNG is ~3:1) gets letterboxed inside
+          # of — see the icon_size_style comment in value-box.lua. The PNG
+          # is wider than tall, so width is the explicit declaration and
+          # height is left auto to preserve its aspect ratio; object-fit is
+          # a no-op once the box already matches the image's proportions,
+          # so it's dropped along with the square fallback that needed it.
+          assert_present '<img class="icon" src="example-icon.png" style="width:64px; height:auto; display:block;" alt="">' \
+            "$out" "$fixture/$fmt PNG icon-size constrains width only, height stays auto to match its aspect ratio"
         fi
 
         if [ "$fixture" = "minimal" ]; then

@@ -92,6 +92,64 @@ local function css_decl(property, value)
   return string.format("%s:%s; ", property, value)
 end
 
+-- Reads width/height straight out of a PNG's IHDR chunk (bytes 16-23,
+-- after the 8-byte signature and the chunk's own 4-byte length + 4-byte
+-- "IHDR" type) rather than pulling in an image library just to learn the
+-- icon's aspect ratio. Returns nil, nil if the file is too short or isn't
+-- actually a PNG.
+local function png_dimensions(path)
+  local f = io.open(path, "rb")
+  if not f then return nil, nil end
+  local header = f:read(24)
+  f:close()
+  if not header or #header < 24 or header:sub(1, 8) ~= "\137PNG\r\n\26\n" then
+    return nil, nil
+  end
+  local function be32(offset)
+    local b1, b2, b3, b4 = header:byte(offset, offset + 3)
+    return b1 * 16777216 + b2 * 65536 + b3 * 256 + b4
+  end
+  return be32(17), be32(21)
+end
+
+-- Reads the intrinsic aspect ratio out of an already-loaded SVG file's own
+-- viewBox (falling back to its width/height attributes if it has no
+-- viewBox). Only the first match is read, matching the assumption the
+-- style-injection gsub elsewhere already makes: that the file's own root
+-- <svg ...> tag is the first one in the document.
+local function svg_dimensions(svg_content)
+  local _minx, _miny, w, h = svg_content:match(
+    'viewBox%s*=%s*"%s*([%-%d%.]+)[%s,]+([%-%d%.]+)[%s,]+([%-%d%.]+)[%s,]+([%-%d%.]+)')
+  if w and h then
+    return tonumber(w), tonumber(h)
+  end
+  local aw = svg_content:match('<svg[^>]-%swidth%s*=%s*"([%d%.]+)')
+  local ah = svg_content:match('<svg[^>]-%sheight%s*=%s*"([%d%.]+)')
+  if aw and ah then
+    return tonumber(aw), tonumber(ah)
+  end
+  return nil, nil
+end
+
+-- Chooses which axis icon-size constrains: whichever is larger for the
+-- icon's own natural dimensions, with the other left auto so the browser
+-- scales it proportionally. Without this, forcing both width and height to
+-- the same value pins a non-square icon into a square box and it gets
+-- letterboxed inside it — visible as empty space the icon's own background
+-- shows through. Falls back to the old fixed square when the natural
+-- dimensions can't be determined (unexpected format, corrupt file, no
+-- viewBox); the second return value flags that fallback so callers that
+-- also use object-fit:contain as a safety net know when they still need it.
+local function icon_size_style(size, natural_w, natural_h)
+  if not natural_w or not natural_h or natural_w <= 0 or natural_h <= 0 then
+    return css_decl("width", size) .. css_decl("height", size), true
+  elseif natural_w >= natural_h then
+    return css_decl("width", size) .. "height:auto; ", false
+  else
+    return "width:auto; " .. css_decl("height", size), false
+  end
+end
+
 -- Escape a value for interpolation into a double-quoted HTML attribute.
 local function escape_attr(s)
   return (tostring(s):gsub('[&<>"]', {
@@ -508,13 +566,11 @@ function Div(el)
     end
 
     -- Build icon HTML (empty string if no icon).
-    -- Every icon-font branch shares the same style prelude, and the two image
-    -- branches share a sizing pair. Both go through css_decl so that a blank
-    -- icon-size or icon-color omits the declaration instead of emitting
-    -- "font-size:;".
+    -- Every icon-font branch shares the same style prelude. Both go through
+    -- css_decl so that a blank icon-size or icon-color omits the
+    -- declaration instead of emitting "font-size:;".
     local icon_font_style = css_decl("font-size", icon_size_font)
       .. css_decl("color", icon_color) .. icon_extra_style
-    local icon_img_size = css_decl("width", icon_size_img) .. css_decl("height", icon_size_img)
 
     local icon_html = ""
     if icon ~= "" then
@@ -527,10 +583,12 @@ function Div(el)
         if svg_file then
           local svg_content = svg_file:read("*all")
           svg_file:close()
-          svg_content = svg_content:gsub('<svg', string.format('<svg style="%s"', icon_img_size))
+          local natural_w, natural_h = svg_dimensions(svg_content)
+          local svg_size_style = icon_size_style(icon_size_img, natural_w, natural_h)
+          svg_content = svg_content:gsub('<svg', string.format('<svg style="%s"', svg_size_style))
           icon_html = string.format(
-            '<span class="icon" style="%sdisplay:inline-flex; align-items:center; justify-content:center; font-size:inherit;%s">%s</span>',
-            icon_img_size, icon_extra_style, svg_content
+            '<span class="icon" style="display:inline-flex; align-items:center; justify-content:center; font-size:inherit;%s">%s</span>',
+            icon_extra_style, svg_content
           )
         else
           io.stderr:write(string.format("value-box warning: SVG file not found: %s\n", icon))
@@ -540,9 +598,12 @@ function Div(el)
         local png_file = io.open(icon, "r")
         if png_file then
           png_file:close()
+          local natural_w, natural_h = png_dimensions(icon)
+          local png_size_style, is_fallback_square = icon_size_style(icon_size_img, natural_w, natural_h)
+          local object_fit_style = is_fallback_square and "object-fit:contain; " or ""
           icon_html = string.format(
-            '<img class="icon" src="%s" style="%sobject-fit:contain; display:block;%s" alt="">',
-            icon_attr, icon_img_size, icon_extra_style
+            '<img class="icon" src="%s" style="%s%sdisplay:block;%s" alt="">',
+            icon_attr, png_size_style, object_fit_style, icon_extra_style
           )
         else
           io.stderr:write(string.format("value-box warning: PNG file not found '%s', falling back to Bootstrap Icons\n", icon))
