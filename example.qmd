@@ -1011,7 +1011,7 @@ Local svg file
 
 ::: {.column width='30%'}
 
-::: {.value-box icon="example-icon.png" icon-size="200px" color="bg-blue" align="center"}
+::: {.value-box icon="example-icon.png" icon-size="300px" color="bg-blue" align="center"}
 Local png file
 :::
 
@@ -1021,7 +1021,7 @@ Local png file
 
 ::: {style='font-size: 75%;'}
 ```md
-::: {.value-box icon="example-icon.png" icon-size="200px" color="bg-blue" align="center"}
+::: {.value-box icon="example-icon.png" icon-size="300px" color="bg-blue" align="center"}
 Local png file
 :::
 ```
