@@ -979,33 +979,53 @@ Font Awesome also has Pro-only styles &mdash; `fa-light`, `fa-thin`, and `fa-duo
 
 ## Using local files as icons
 
+By passing in the path to an svg or png file, you can use any image as an 'icon'.
+
 :::: {.columns}
 
-::: {.column width='50%'}
+::: {.column width='30%'}
 
-::: {.value-box icon="example-icon.svg" icon-position="left" color="bg-grey" value="42"}
+::: {.value-box icon="example-icon.svg" color="bg-grey" value="42" align="center"}
 Local svg file
 :::
 
+
+
+:::
+
+::: {.column width='70%'}
+
+::: {style='font-size: 75%;'}
 ```md
-::: {.value-box icon="example-icon.svg" icon-position="left" color="bg-grey" value="42"}
+::: {.value-box icon="example-icon.svg" color="bg-grey" value="42" align="center"}
 Local svg file
 :::
 ```
+:::
 
 :::
 
-::: {.column width='50%'}
+::::
 
-::: {.value-box icon="example-icon.png" icon-size="256px" icon-position="left" color="bg-blue"}
+:::: {.columns}
+
+::: {.column width='30%'}
+
+::: {.value-box icon="example-icon.png" icon-size="256px" color="bg-blue" align="center"}
 Local png file
 :::
 
+:::
+
+::: {.column width='70%'}
+
+::: {style='font-size: 75%;'}
 ```md
-::: {.value-box icon="example-icon.png" icon-size="256px" icon-position="left" color="bg-blue"}
+::: {.value-box icon="example-icon.png" icon-size="256px" color="bg-blue" align="center"}
 Local png file
 :::
 ```
+:::
 
 :::
 
