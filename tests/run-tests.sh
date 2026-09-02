@@ -239,9 +239,10 @@ for fmt in "${formats[@]}"; do
       # Deliberately triggers one warning: an unrecognised delta-direction.
       assert_count 1 "value-box warning" "$log" "$fixture/$fmt warns about the one unrecognised delta-direction"
     elif [ "$fixture" = "row" ]; then
-      # Deliberately triggers two warnings: a literal style collision and an
-      # unrecognised (non-numeric) columns value.
-      assert_count 2 "value-box warning" "$log" "$fixture/$fmt warns about the dropped style and the unrecognised columns value"
+      # Deliberately triggers three warnings: a literal style collision, an
+      # unrecognised (non-numeric) columns value, and an unrecognised
+      # responsive value.
+      assert_count 3 "value-box warning" "$log" "$fixture/$fmt warns about the dropped style, the unrecognised columns value and the unrecognised responsive value"
     else
       assert_absent "value-box warning" "$log" "$fixture/$fmt emits no filter warnings"
     fi
@@ -499,11 +500,45 @@ for fmt in "${formats[@]}"; do
           # columns/gap attribute into a class or custom property — so these
           # anchor to filter-generated markup, not an echoed attribute.
           assert_present 'class="value-box-row" style="--vb-row-gap:1.5rem; ">' \
-            "$out" "$fixture/$fmt no columns attribute lays out a non-wrapping flex row"
+            "$out" "$fixture/$fmt no columns attribute lays out a wrapping flex row (no extra class or custom property)"
           assert_present 'class="value-box-row vb-row-grid" style="--vb-row-columns:3; --vb-row-gap:1.5rem; ">' \
             "$out" "$fixture/$fmt columns=3 switches to a grid with equal-height wrapped rows"
           assert_present 'class="value-box-row" style="--vb-row-gap:3rem; border:1px dashed red;">' \
             "$out" "$fixture/$fmt gap and extra-style apply to the row wrapper"
+
+          # Small-screen reflow. min-column-width travels as the --vb-row-min-col
+          # custom property, appended after --vb-row-gap and only when set;
+          # responsive="false" adds the vb-row-fixed class. All filter-generated.
+          assert_present 'class="value-box-row" style="--vb-row-gap:1.5rem; --vb-row-min-col:16rem; ">' \
+            "$out" "$fixture/$fmt min-column-width travels as --vb-row-min-col"
+          assert_present 'class="value-box-row vb-row-grid" style="--vb-row-columns:4; --vb-row-gap:1.5rem; --vb-row-min-col:10rem; ">' \
+            "$out" "$fixture/$fmt min-column-width and columns coexist on the row"
+          # A blank min-column-width is "unset": the row it produces is
+          # byte-identical to a plain row (asserted above), and no partial
+          # --vb-row-min-col declaration is left behind.
+          assert_absent '--vb-row-min-col:;' "$out" "$fixture/$fmt a blank min-column-width emits no empty --vb-row-min-col declaration"
+          assert_absent '--vb-row-min-col: ' "$out" "$fixture/$fmt a blank min-column-width emits no whitespace-only --vb-row-min-col declaration"
+          assert_present 'class="value-box-row vb-row-fixed" style="--vb-row-gap:1.5rem; ">' \
+            "$out" "$fixture/$fmt responsive=false adds vb-row-fixed to opt out of reflow"
+          assert_present 'class="value-box-row vb-row-grid vb-row-fixed" style="--vb-row-columns:3; --vb-row-gap:1.5rem; ">' \
+            "$out" "$fixture/$fmt responsive=false alongside columns pins the grid to exactly N"
+
+          # The reflow behaviour lives entirely in value-box.css — anchor to
+          # the mechanism (the custom property the filter feeds and the rules
+          # that consume it), as the icons/align check at ~L286 does, rather
+          # than to a rendered pixel width.
+          css="$work/$fmt/_extensions/value-box/value-box.css"
+          assert_present 'flex: 1 1 var(--vb-row-min-col, 14rem);' "$css" \
+            "$fixture/$fmt value-box.css sizes flex-row children from --vb-row-min-col"
+          assert_present 'repeat(' "$css" "$fixture/$fmt value-box.css keeps a repeat() grid template"
+          assert_present 'auto-fill,' "$css" \
+            "$fixture/$fmt value-box.css grid uses auto-fill so columns drop as the row narrows"
+          assert_present 'grid-auto-rows: 1fr;' "$css" \
+            "$fixture/$fmt value-box.css keeps grid-auto-rows:1fr for equal-height wrapped rows"
+          assert_present '.value-box-row.vb-row-fixed.vb-row-grid {' "$css" \
+            "$fixture/$fmt value-box.css keeps the responsive=false opt-out for the grid"
+          assert_present 'grid-template-columns: repeat(var(--vb-row-columns), 1fr);' "$css" \
+            "$fixture/$fmt value-box.css opt-out restores the exact-N-column grid"
 
           # id, an extra class, and role/aria-label/data-id all pass through,
           # but top is outside the recognised set and must be left off

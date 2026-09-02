@@ -638,7 +638,7 @@ Icon below text, all centred
 ## Row layout
 
 ::: {style='font-size: 75%;'}
-Wrap value boxes in `.value-box-row` for an equal-width, equal-height KPI strip — no more hand-rolling `.columns`/`.column` scaffolding or hand-setting `height` on every box to make them match. With no `columns` set, boxes lay out in a single non-wrapping row:
+Wrap value boxes in `.value-box-row` for an equal-width, equal-height KPI strip — no more hand-rolling `.columns`/`.column` scaffolding or hand-setting `height` on every box to make them match. With no `columns` set, boxes lay out in a single row that reflows onto more lines as its container narrows (see the "Small screens" slide):
 :::
 
 ::: {.value-box-row}
@@ -729,7 +729,7 @@ Only the third box's `color` was repeated — `icon-position`, `icon-size`, `wid
 
 ## Grid layout - example
 
-Set `columns` to switch to a grid: extra boxes wrap onto further rows once it's full, with every row — not just each one individually — kept the same height.
+Set `columns` to switch to a grid: extra boxes wrap onto further rows once it's full, with every row — not just each one individually — kept the same height. On a narrow screen the grid also drops columns to stay readable — see the "Small screens" slide.
 
 ::: {.value-box-row columns="3"}
 
@@ -791,7 +791,55 @@ Wins
 :::
 ```
 
+## Small screens
 
+::: {style='font-size: 66%;'}
+A row adapts to the width of its **container**. A plain flex row wraps its boxes onto more lines; a `columns="N"` grid drops columns one at a time — down to a single column — instead of crushing the boxes together or overflowing sideways. The sizing is intrinsic CSS, not a `@media` breakpoint, so it follows the row's own container width. `min-column-width` (default `14rem`) tunes when a column is dropped; `responsive="false"` turns it off.
+
+This matters most for **`format: html`** documents, where the page reflows as the browser window resizes. **Reveal.js slides are a fixed size** (they scale as a whole rather than reflowing), so resizing this deck does *nothing* — a deck keeps its layout. The one effect you still see on a slide: a row in a narrow container shows fewer columns, as below — the same row full-width would show three.
+:::
+
+:::: {.columns}
+
+::: {.column width='58%'}
+```md
+<!-- html: reflows 3 → 2 → 1 as the window narrows.
+     revealjs: shows however many columns fit the
+     container it's placed in, then stays put. -->
+::: {.value-box-row columns="3"}
+  … three boxes …
+:::
+
+<!-- always 3-wide, every width, every format -->
+::: {.value-box-row columns="3" responsive="false"}
+  … three boxes …
+:::
+```
+:::
+
+::: {.column width='42%'}
+::: {style='font-size: 70%;'}
+In this 42%-wide column:
+:::
+
+::: {.value-box-row columns="3"}
+
+::: {.value-box value="128" color="bg-teal"}
+Signups
+:::
+
+::: {.value-box value="42" color="bg-amber"}
+Open tickets
+:::
+
+::: {.value-box value="99%" color="bg-green"}
+Uptime
+:::
+
+:::
+:::
+
+::::
 
 
 # Icons
@@ -1668,7 +1716,7 @@ Tada!
 Every fragment style shipped with this version of Reveal.js, one per box — advance through the slide to see each one in turn. All of them fade in on entry; the class name controls what (if anything) happens after that. See the [Reveal.js docs](https://quarto.org/docs/presentations/revealjs/advanced.html#fragment-classes) for the full reference.
 :::
 
-::: {.value-box-row columns="5"}
+::: {.value-box-row columns="5" responsive="false"}
 
 ::: {.value-box fragment="fade-in" value="fade-in" min-height="70px" padding="0.6rem" value-font-size="1.3rem"}
 Fades in, stays visible

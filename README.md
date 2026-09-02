@@ -106,13 +106,19 @@ Uptime
 :::
 ```
 
-With no `columns` set, boxes lay out in a single row that doesn't wrap — the common case. Set `columns` to switch to a grid that wraps extra boxes onto further rows once it's full, with every row (not just each individual row) kept the same height:
+With no `columns` set, boxes lay out in a single row that reflows onto further lines as its container narrows — the common case. Set `columns` to switch to a grid that wraps extra boxes onto further rows once it's full, with every row (not just each individual row) kept the same height:
 
 ```md
 ::: {.value-box-row columns="3"}
 <!-- six boxes here wrap into two rows of three, each row equal height -->
 :::
 ```
+
+**Small screens.** By default a row adapts to the width of its container: the plain flex row wraps its boxes onto more lines, and a `columns="N"` grid drops columns one at a time — down to a single column — rather than crushing `N` boxes together or overflowing sideways. `columns="N"` is therefore an *upper* bound on the column count, not a fixed count. `min-column-width` (default `14rem`) sets how narrow a column may get before the row drops one; as a rough guide a row reaches a single column at roughly `min-column-width × columns`. Set it per row, or globally for a project with `:root { --vb-row-min-col: 12rem; }` in your own stylesheet. Quarto's default HTML article column is fairly narrow (~700px), so at the `14rem` default a `columns="4"` or wider row will usually render with fewer than `N` columns at rest unless you place it in a wide (`.column-page`/`.column-screen`) layout or lower `min-column-width`. `responsive="false"` turns the adaptation off and restores a rigid single row / exactly-`N`-column grid. Equal height *across* wrapped lines only applies in `columns="N"` grid mode; a plain flex row equalises heights within each line.
+
+The adaptation is intrinsic CSS sizing (`flex-wrap`, `auto-fill` grid), not `@media`/`@container` queries, so it tracks the row's own container width rather than the viewport — which is what makes it behave sensibly inside a `.column`, a margin block, or a `.column-page`/`.column-screen` layout.
+
+> **This is a reflowing-layout feature — i.e. `format: html` and similar.** There, the page (and the row's container) resizes with the browser window, and the row reflows continuously as it does. **Reveal.js slides do not reflow**: a slide is a fixed pixel size and is scaled as a whole to fit the screen, so resizing a deck's window changes nothing about the layout. The only effect you see on a slide is static: a row placed in a narrow container (a `columns` layout, an explicit width) shows fewer columns than the same row at full slide width. If a full-width `columns="N"` row shows fewer than `N` columns on your slides, `N × min-column-width` exceeds the slide width — lower `min-column-width`, or set `responsive="false"` on that row.
 
 Like `.value-box` itself, `.value-box-row` passes through its own `#id`, extra classes, and `data-*`/`aria-*`/`role`/`tabindex`/`lang` attributes; a literal `style` attribute is dropped (with a warning) — use `extra-style` instead.
 
@@ -138,8 +144,10 @@ The following never inherit, since they identify a specific box rather than styl
 
 | Parameter    | Type    | Default    | Description                                                                                                                                    |
 | ------------ | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `columns`    | number  | `""`       | Number of columns in the grid. If omitted, boxes lay out in a single non-wrapping row instead — one column per box, no count needed.             |
-| `gap`        | string  | `1.5rem`   | Spacing between boxes, both between columns and (when `columns` wraps) between rows. Accepts any valid CSS size unit.                            |
+| `columns`    | number  | `""`       | Maximum number of columns in the grid. Extra boxes wrap onto further rows; on a narrow container the grid shows fewer than this. If omitted, boxes lay out in a single flex row that wraps onto more lines as space runs out — no count needed.             |
+| `gap`        | string  | `1.5rem`   | Spacing between boxes, both between columns and (when `columns` wraps) between rows. Accepts any valid CSS size unit (a single length — it also feeds the responsive column maths).                            |
+| `min-column-width` | string | `14rem` | How narrow a column may get before the row wraps (flex) or drops a column (grid). Raise it for boxes with long text or large icons, lower it to keep more columns on tablets / in narrow layouts. Accepts any valid CSS length. Also settable project-wide as `:root { --vb-row-min-col: … }`.  |
+| `responsive` | `true` \| `false` | `true` | When `true` (the default) the row reflows to fewer columns as its container narrows. Set to `false` to restore a rigid single non-wrapping row / exactly-`columns`-wide grid at every width.  |
 | `extra-style`| string  | `""`       | Additional CSS styles applied to the row wrapper itself. Useful for advanced customisation beyond the built-in options.                          |
 
 | Parameter             | Type                                | Default         | Description                                                                                                                                                                                                                                                                                                                                                                                       |

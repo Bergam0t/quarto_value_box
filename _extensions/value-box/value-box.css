@@ -157,27 +157,57 @@ a.value-box:hover {
     min-width: 0;
 }
 
+/* Both row modes below reflow to fewer columns — down to a single column on a
+   phone — as the row's own container narrows, with no media query involved:
+   the sizing is all container-relative (%, fr, calc), so it also tracks a
+   sidebar/margin column or a transform-scaled Reveal slide, which a viewport
+   @media query would not. --vb-row-min-col (default 14rem, or the
+   min-column-width attribute, or a project-wide :root override) is how narrow
+   a column may get before the row drops one. .vb-row-fixed (responsive="false")
+   opts back out to the previous rigid behaviour. */
 .value-box-row {
     margin-bottom: 1.5rem;
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: var(--vb-row-gap);
 }
 
-/* columns="N": switches to a grid so extra children wrap onto further rows,
-   all kept equal height via grid-auto-rows. */
+/* columns="N": a grid instead of a flex row, so children past N wrap onto
+   further rows kept equal height via grid-auto-rows. N is now an *upper*
+   bound, not a fixed count — wide enough and you get exactly N columns; as the
+   container narrows, columns drop one at a time once a column would fall below
+   --vb-row-min-col. The minmax minimum is the larger of that min width and an
+   even Nth of the row (minus gaps) — the Nth term is what caps the count at N
+   — then floored at 100% so a container narrower than one column can't
+   overflow. auto-fill (not auto-fit) keeps an under-filled row's cells the
+   same size as a full row's, exactly matching the old repeat(N, 1fr). */
 .value-box-row.vb-row-grid {
     display: grid;
-    grid-template-columns: repeat(var(--vb-row-columns), 1fr);
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(
+            min(
+                100%,
+                max(
+                    var(--vb-row-min-col, 14rem),
+                    calc((100% - (var(--vb-row-columns) - 1) * var(--vb-row-gap)) / var(--vb-row-columns))
+                )
+            ),
+            1fr
+        )
+    );
     grid-auto-rows: 1fr;
 }
 
-/* flex:1 1 0 is a no-op under display:grid (columns="N"), so this one rule
-   gives equal-width children in both the default flex row and the grid
-   mode. min-width:0 stops a long value from forcing a child wider than its
-   share of the row. */
+/* flex:1 1 <basis> is a no-op under display:grid (columns="N"), so grid mode
+   is unaffected by this rule. In the default flex row it gives each child a
+   --vb-row-min-col starting width: a line wraps once it can't hold its
+   children at that width, then they grow to share the line — so a plain flex
+   row wraps at the same width a grid row would drop a column. min-width:0
+   stops a long value from forcing a child past its share and breaking the
+   wrap maths. */
 .value-box-row > * {
-    flex: 1 1 0;
+    flex: 1 1 var(--vb-row-min-col, 14rem);
     min-width: 0;
 }
 
@@ -187,6 +217,18 @@ a.value-box:hover {
    rows is handled by .value-box-row's own margin-bottom above instead. */
 .value-box-row > .value-box {
     margin-bottom: 0;
+}
+
+/* responsive="false": restore the pre-1.6 rigid layout — a flex row that
+   never wraps, or a grid pinned to exactly N columns at any width. */
+.value-box-row.vb-row-fixed {
+    flex-wrap: nowrap;
+}
+.value-box-row.vb-row-fixed > * {
+    flex: 1 1 0;
+}
+.value-box-row.vb-row-fixed.vb-row-grid {
+    grid-template-columns: repeat(var(--vb-row-columns), 1fr);
 }
 
 /* Each also has an a.value-box.<class> variant at the same doubled

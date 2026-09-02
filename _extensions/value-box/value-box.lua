@@ -766,14 +766,41 @@ function Div(el)
       end
     end
 
+    -- responsive="false" opts out of the wrap / column-drop behaviour and
+    -- restores the pre-1.6 rigid layout via the vb-row-fixed class. Matched
+    -- case-insensitively; "" and "true" keep the default, anything else warns
+    -- and keeps the default — same validate-or-warn shape as the columns block.
+    local responsive_attr = el.attributes["responsive"]
+    if responsive_attr then
+      local responsive_lower = responsive_attr:lower()
+      if responsive_lower == "false" then
+        row_layout_class = row_layout_class .. " vb-row-fixed"
+      elseif responsive_lower ~= "" and responsive_lower ~= "true" then
+        io.stderr:write(string.format(
+          "value-box warning: unrecognised responsive value '%s' — expected true or false; keeping the responsive default\n",
+          responsive_attr))
+      end
+    end
+
+    -- min-column-width: how narrow a column may get before the row wraps
+    -- (flex mode) or drops a column (grid mode). Emitted only when set — the
+    -- stylesheet carries the 14rem default as the var() fallback, same as
+    -- --vb-icon-align — so a default row's style string stays unchanged.
+    local min_col_raw = el.attributes["min-column-width"]
+    local min_col_style = ""
+    if min_col_raw and min_col_raw ~= "" then
+      min_col_style = css_decl("--vb-row-min-col", escape_attr(min_col_raw))
+    end
+
     local gap = escape_attr(el.attributes["gap"] or "1.5rem")
     local row_extra_style = escape_attr(el.attributes["extra-style"] or "")
 
     local id_attr, extra_classes, passthrough_attrs = build_wrapper_attrs(el, "value-box-row", "extra-style", nil)
 
     local html_open = string.format(
-      '<div%s class="value-box-row%s%s" style="%s%s%s"%s>',
-      id_attr, row_layout_class, extra_classes, columns_style, css_decl("--vb-row-gap", gap), row_extra_style, passthrough_attrs
+      '<div%s class="value-box-row%s%s" style="%s%s%s%s"%s>',
+      id_attr, row_layout_class, extra_classes,
+      columns_style, css_decl("--vb-row-gap", gap), min_col_style, row_extra_style, passthrough_attrs
     )
 
     local result = pandoc.List({pandoc.RawBlock("html", html_open)})
