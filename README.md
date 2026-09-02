@@ -106,13 +106,19 @@ Uptime
 :::
 ```
 
-With no `columns` set, boxes lay out in a single row that doesn't wrap — the common case. Set `columns` to switch to a grid that wraps extra boxes onto further rows once it's full, with every row (not just each individual row) kept the same height:
+With no `columns` set, boxes lay out in a single row that reflows onto further lines as its container narrows — the common case. Set `columns` to switch to a grid that wraps extra boxes onto further rows once it's full, with every row (not just each individual row) kept the same height:
 
 ```md
 ::: {.value-box-row columns="3"}
 <!-- six boxes here wrap into two rows of three, each row equal height -->
 :::
 ```
+
+**Small screens.** By default a row adapts to the width of its container: the plain flex row wraps its boxes onto more lines, and a `columns="N"` grid drops columns one at a time — down to a single column — rather than crushing `N` boxes together or overflowing sideways. `columns="N"` is therefore an *upper* bound on the column count, not a fixed count. `min-column-width` (default `14rem`) sets how narrow a column may get before the row drops one; as a rough guide a row reaches a single column at roughly `min-column-width × columns`. Set it per row, or globally for a project with `:root { --vb-row-min-col: 12rem; }` in your own stylesheet. Quarto's default HTML article column is fairly narrow (~700px), so at the `14rem` default a `columns="4"` or wider row will usually render with fewer than `N` columns at rest unless you place it in a wide (`.column-page`/`.column-screen`) layout or lower `min-column-width`. `responsive="false"` turns the adaptation off and restores a rigid single row / exactly-`N`-column grid. Equal height *across* wrapped lines only applies in `columns="N"` grid mode; a plain flex row equalises heights within each line.
+
+The adaptation is intrinsic CSS sizing (`flex-wrap`, `auto-fill` grid), not `@media`/`@container` queries, so it tracks the row's own container width rather than the viewport — which is what makes it behave sensibly inside a `.column`, a margin block, or a `.column-page`/`.column-screen` layout.
+
+> **This is a reflowing-layout feature — i.e. `format: html` and similar.** There, the page (and the row's container) resizes with the browser window, and the row reflows continuously as it does. **Reveal.js slides do not reflow**: a slide is a fixed pixel size and is scaled as a whole to fit the screen, so resizing a deck's window changes nothing about the layout. The only effect you see on a slide is static: a row placed in a narrow container (a `columns` layout, an explicit width) shows fewer columns than the same row at full slide width. If a full-width `columns="N"` row shows fewer than `N` columns on your slides, `N × min-column-width` exceeds the slide width — lower `min-column-width`, or set `responsive="false"` on that row.
 
 Like `.value-box` itself, `.value-box-row` passes through its own `#id`, extra classes, and `data-*`/`aria-*`/`role`/`tabindex`/`lang` attributes; a literal `style` attribute is dropped (with a warning) — use `extra-style` instead.
 
@@ -138,8 +144,10 @@ The following never inherit, since they identify a specific box rather than styl
 
 | Parameter    | Type    | Default    | Description                                                                                                                                    |
 | ------------ | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `columns`    | number  | `""`       | Number of columns in the grid. If omitted, boxes lay out in a single non-wrapping row instead — one column per box, no count needed.             |
-| `gap`        | string  | `1.5rem`   | Spacing between boxes, both between columns and (when `columns` wraps) between rows. Accepts any valid CSS size unit.                            |
+| `columns`    | number  | `""`       | Maximum number of columns in the grid. Extra boxes wrap onto further rows; on a narrow container the grid shows fewer than this. If omitted, boxes lay out in a single flex row that wraps onto more lines as space runs out — no count needed.             |
+| `gap`        | string  | `1.5rem`   | Spacing between boxes, both between columns and (when `columns` wraps) between rows. Accepts any valid CSS size unit (a single length — it also feeds the responsive column maths).                            |
+| `min-column-width` | string | `14rem` | How narrow a column may get before the row wraps (flex) or drops a column (grid). Raise it for boxes with long text or large icons, lower it to keep more columns on tablets / in narrow layouts. Accepts any valid CSS length. Also settable project-wide as `:root { --vb-row-min-col: … }`.  |
+| `responsive` | `true` \| `false` | `true` | When `true` (the default) the row reflows to fewer columns as its container narrows. Set to `false` to restore a rigid single non-wrapping row / exactly-`columns`-wide grid at every width.  |
 | `extra-style`| string  | `""`       | Additional CSS styles applied to the row wrapper itself. Useful for advanced customisation beyond the built-in options.                          |
 
 | Parameter             | Type                                | Default         | Description                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -184,6 +192,57 @@ The following never inherit, since they identify a specific box rather than styl
 
 
 ## Advanced Customisation
+
+### Setting defaults for a whole project
+
+Every styling default is a CSS custom property with the default baked into the extension's stylesheet as a `var(--vb-…, <default>)` fallback. The filter only writes a `--vb-*` value onto a box when you set the matching **attribute** on that box (or inherit it from its `.value-box-row`). So to change a default everywhere, set the variable once on `:root` (or any container) in a stylesheet you load after the extension:
+
+```yml
+format:
+  html:
+    css: value-box-theme.css   # loaded after the extension
+```
+
+```css
+/* value-box-theme.css — applies to every value box in the project */
+:root {
+  --vb-width: 100%;          /* stop boxes sitting at 80% of their container */
+  --vb-padding: 1.25rem;
+  --vb-min-height: 120px;
+  --vb-font-size: 1rem;         /* the details text                         */
+  --vb-value-font-size: 2.6rem;
+  --vb-font-color: #1b1b1b;     /* dark text — pair with light bg-* colours  */
+  --vb-row-gap: 1rem;           /* spacing between boxes in a .value-box-row */
+  --vb-row-min-col: 12rem;      /* how narrow a column gets before the row reflows */
+}
+```
+
+A per-box or per-row attribute still wins, because it lands in that element's inline `style`. Scope a variable to part of a document by setting it on a wrapper instead of `:root` (e.g. `::: {style="--vb-value-font-size: 3.5rem"}` around a section).
+
+| Variable | Default | Per-box attribute |
+| --- | --- | --- |
+| `--vb-width` | `80%` | `width` |
+| `--vb-height` | `auto` | `height` |
+| `--vb-min-height` | `100px` | `min-height` |
+| `--vb-padding` | `1.5rem` | `padding` |
+| `--vb-text-align` | `left` | `align` |
+| `--vb-icon-align` | `flex-start` | `align` (takes a flex keyword: `flex-start`/`center`/`flex-end`) |
+| `--vb-justify-content` | `center` | `valign` (box with a top/bottom icon) |
+| `--vb-align-items` | `center` | `valign` (box with a left/right icon) |
+| `--vb-font-size` | `1.1rem` | `font-size` |
+| `--vb-value-font-size` | `2.2rem` | `value-font-size` |
+| `--vb-title-font-size` | `0.9rem` | `title-font-size` |
+| `--vb-delta-font-size` | `1rem` | `delta-font-size` |
+| `--vb-icon-size` | `3em` | `icon-size` (font-glyph icons only — SVG/PNG icons are sized on the `icon-size` attribute) |
+| `--vb-font-color` | `white` | `font-color` |
+| `--vb-value-color` | inherits `--vb-font-color` | `value-color` |
+| `--vb-title-color` | inherits `--vb-font-color` | `title-color` |
+| `--vb-icon-color` | `white` | `icon-color` |
+| `--vb-delta-color` | `inherit` | `delta-color` |
+| `--vb-row-gap` | `1.5rem` | `gap` (on `.value-box-row`) |
+| `--vb-row-min-col` | `14rem` | `min-column-width` (on `.value-box-row`) |
+
+Box background is not in this list — set it with the `color` attribute, a `bg-*` class, or `_brand.yml` (see below).
 
 ### Colours
 

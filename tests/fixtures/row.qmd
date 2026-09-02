@@ -106,6 +106,91 @@ Falls back to a row
 
 :::
 
+## min-column-width sets the reflow threshold
+
+`min-column-width` is emitted as the `--vb-row-min-col` custom property; the
+stylesheet carries the default, so an unset row emits nothing extra.
+
+::: {.value-box-row min-column-width="16rem"}
+
+::: {.value-box value="1"}
+Custom reflow width
+:::
+
+::: {.value-box value="2"}
+Custom reflow width
+:::
+
+:::
+
+## min-column-width alongside columns
+
+::: {.value-box-row columns="4" min-column-width="10rem"}
+
+::: {.value-box value="1"}
+Grid plus a reflow width
+:::
+
+::: {.value-box value="2"}
+Grid plus a reflow width
+:::
+
+:::
+
+## A blank min-column-width emits nothing
+
+An explicit blank counts as unset, not a value — the row wrapper carries no
+custom property for it, and no half-written declaration is left behind.
+
+::: {.value-box-row min-column-width=""}
+
+::: {.value-box value="1"}
+Blank min-column-width
+:::
+
+:::
+
+## responsive="false" restores the rigid single row
+
+::: {.value-box-row responsive="false"}
+
+::: {.value-box value="1"}
+Never wraps
+:::
+
+::: {.value-box value="2"}
+Never wraps
+:::
+
+:::
+
+## responsive="false" alongside columns pins the grid to exactly N
+
+::: {.value-box-row columns="3" responsive="false"}
+
+::: {.value-box value="1"}
+Always three columns
+:::
+
+::: {.value-box value="2"}
+Always three columns
+:::
+
+:::
+
+## An unrecognised responsive value warns and keeps the default
+
+`responsive="maybe"` is neither `true` nor `false`, so this must warn and leave
+the responsive default on (no `vb-row-fixed` class) rather than crashing.
+
+::: {.value-box-row responsive="maybe"}
+
+::: {.value-box value="1"}
+Still responsive
+:::
+
+:::
+
 ## Row-level defaults inherited by children
 
 `icon-position`, `color`, `icon-size` and `align` are set once on the row;
