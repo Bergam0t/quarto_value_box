@@ -193,6 +193,57 @@ The following never inherit, since they identify a specific box rather than styl
 
 ## Advanced Customisation
 
+### Setting defaults for a whole project
+
+Every styling default is a CSS custom property with the default baked into the extension's stylesheet as a `var(--vb-…, <default>)` fallback. The filter only writes a `--vb-*` value onto a box when you set the matching **attribute** on that box (or inherit it from its `.value-box-row`). So to change a default everywhere, set the variable once on `:root` (or any container) in a stylesheet you load after the extension:
+
+```yml
+format:
+  html:
+    css: value-box-theme.css   # loaded after the extension
+```
+
+```css
+/* value-box-theme.css — applies to every value box in the project */
+:root {
+  --vb-width: 100%;          /* stop boxes sitting at 80% of their container */
+  --vb-padding: 1.25rem;
+  --vb-min-height: 120px;
+  --vb-font-size: 1rem;         /* the details text                         */
+  --vb-value-font-size: 2.6rem;
+  --vb-font-color: #1b1b1b;     /* dark text — pair with light bg-* colours  */
+  --vb-row-gap: 1rem;           /* spacing between boxes in a .value-box-row */
+  --vb-row-min-col: 12rem;      /* how narrow a column gets before the row reflows */
+}
+```
+
+A per-box or per-row attribute still wins, because it lands in that element's inline `style`. Scope a variable to part of a document by setting it on a wrapper instead of `:root` (e.g. `::: {style="--vb-value-font-size: 3.5rem"}` around a section).
+
+| Variable | Default | Per-box attribute |
+| --- | --- | --- |
+| `--vb-width` | `80%` | `width` |
+| `--vb-height` | `auto` | `height` |
+| `--vb-min-height` | `100px` | `min-height` |
+| `--vb-padding` | `1.5rem` | `padding` |
+| `--vb-text-align` | `left` | `align` |
+| `--vb-icon-align` | `flex-start` | `align` (takes a flex keyword: `flex-start`/`center`/`flex-end`) |
+| `--vb-justify-content` | `center` | `valign` (box with a top/bottom icon) |
+| `--vb-align-items` | `center` | `valign` (box with a left/right icon) |
+| `--vb-font-size` | `1.1rem` | `font-size` |
+| `--vb-value-font-size` | `2.2rem` | `value-font-size` |
+| `--vb-title-font-size` | `0.9rem` | `title-font-size` |
+| `--vb-delta-font-size` | `1rem` | `delta-font-size` |
+| `--vb-icon-size` | `3em` | `icon-size` (font-glyph icons only — SVG/PNG icons are sized on the `icon-size` attribute) |
+| `--vb-font-color` | `white` | `font-color` |
+| `--vb-value-color` | inherits `--vb-font-color` | `value-color` |
+| `--vb-title-color` | inherits `--vb-font-color` | `title-color` |
+| `--vb-icon-color` | `white` | `icon-color` |
+| `--vb-delta-color` | `inherit` | `delta-color` |
+| `--vb-row-gap` | `1.5rem` | `gap` (on `.value-box-row`) |
+| `--vb-row-min-col` | `14rem` | `min-column-width` (on `.value-box-row`) |
+
+Box background is not in this list — set it with the `color` attribute, a `bg-*` class, or `_brand.yml` (see below).
+
 ### Colours
 
 A range of colours are supported.

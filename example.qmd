@@ -841,6 +841,55 @@ Uptime
 
 ::::
 
+## Theming the defaults
+
+::: {style='font-size: 66%;'}
+Every styling default is a CSS custom property. The filter only writes one onto a box when you set the matching *attribute*; otherwise the stylesheet's `var(--vb-…, <default>)` fallback applies — so set the variable once and it changes every box. Put it on `:root` in a `css:`/`scss:` file for a whole project, or on a wrapper to scope it (as done here). A per-box attribute still wins.
+:::
+
+:::: {.columns}
+
+::: {.column width='50%'}
+```css
+:root {
+  --vb-padding: 1rem;
+  --vb-min-height: 80px;
+  --vb-value-font-size: 3rem;
+  --vb-font-color: #f4f4f4;
+  --vb-row-gap: 0.75rem;
+}
+```
+See the README's "Setting defaults for a whole project" table for the full list (`--vb-width`, `--vb-icon-size`, `--vb-*-color`, `--vb-row-min-col`, …).
+:::
+
+::: {.column width='50%'}
+::: {style='--vb-padding: 1rem; --vb-min-height: 80px; --vb-value-font-size: 3rem; --vb-row-gap: 0.75rem;'}
+
+::: {.value-box-row columns="2"}
+
+::: {.value-box value="128" color="bg-teal"}
+Signups
+:::
+
+::: {.value-box value="99%" color="bg-green"}
+Uptime
+:::
+
+::: {.value-box value="42" color="bg-amber" value-font-size="1.4rem"}
+`value-font-size` on this box overrides the themed default
+:::
+
+::: {.value-box value="7" color="bg-red"}
+Tickets
+:::
+
+:::
+
+:::
+:::
+
+::::
+
 
 # Icons
 
